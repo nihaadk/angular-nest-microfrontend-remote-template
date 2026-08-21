@@ -84,8 +84,16 @@ To make a host actually load and navigate to this remote:
 
 ## Deployment
 
-This template doesn't ship Dockerfiles or Railway config yet. If you need to
-deploy a remote built from it, use a host shell's Dockerfile setup as the
-model: separate Dockerfiles for `fe`/`be`, a runtime-generated `env.json` so
-the frontend knows its backend's URL without a rebuild, and CORS origins
-configured via an environment variable.
+`fe` and `be` deploy as **two separate Railway services** from this repo
+(root directories `fe` and `be`), each with its own `Dockerfile` - the
+variables to set are documented at the top of each one:
+
+- `be`: `CORS_ORIGINS`
+- `fe`: `BE_URL` (reference the `be` service directly, e.g.
+  `BE_URL=https://${{be.RAILWAY_PUBLIC_DOMAIN}}`, rather than hardcoding it)
+
+`fe`'s image serves the built app with [`serve`](https://github.com/vercel/serve)
+and `--cors` enabled - unlike a host shell, this app's JS has to be loadable
+cross-origin by whatever shell embeds it. Its entrypoint script regenerates
+`env.json` from `BE_URL` on every container start, so pointing the same
+image at a different backend never needs a rebuild.

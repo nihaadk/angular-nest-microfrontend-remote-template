@@ -83,9 +83,8 @@ sedi "s/name: 'remote-template'/name: '$NAME'/" "$FE_DIR/federation.config.mjs"
 echo "→ angular.json: dev-server port"
 sedi "s/\"port\": 4201/\"port\": $FE_PORT/" "$FE_DIR/angular.json"
 
-echo "→ example.service.ts: backend URL"
-sedi "s#http://localhost:3001/api/example#http://localhost:$BE_PORT/api/example#" \
-  "$FE_DIR/src/app/core/example.service.ts"
+echo "→ public/env.json: local-dev default backend URL"
+sedi "s#http://localhost:3001#http://localhost:$BE_PORT#" "$FE_DIR/public/env.json"
 
 echo "→ app.html / app.spec.ts / index.html: display text"
 sedi "s/Remote Template/$DISPLAY_NAME/g" "$FE_DIR/src/app/app.html" "$FE_DIR/src/app/app.spec.ts"
@@ -97,7 +96,11 @@ sedi "s/\"name\": \"be\"/\"name\": \"$NAME-be\"/" "$BE_DIR/package.json"
 
 echo "→ main.ts: port + CORS origin"
 sedi "s/process.env.PORT ?? 3001/process.env.PORT ?? $BE_PORT/" "$BE_DIR/src/main.ts"
-sedi "s#'http://localhost:4201'#'http://localhost:$FE_PORT'#" "$BE_DIR/src/main.ts"
+sedi "s#http://localhost:4201#http://localhost:$FE_PORT#" "$BE_DIR/src/main.ts"
+
+echo "→ .env.example: default port + CORS origin"
+sedi "s/3001/$BE_PORT/" "$BE_DIR/.env.example"
+sedi "s#http://localhost:4201#http://localhost:$FE_PORT#" "$BE_DIR/.env.example"
 
 echo "→ resetting git history to a single fresh commit"
 rm -rf "$SCRIPT_DIR/.git"
@@ -114,6 +117,9 @@ Next steps:
   cd be && npm install && npm start   # http://localhost:$BE_PORT
 
 You can now delete this script (setup.sh) - it's done its job.
+
+Ready for Railway: fe/Dockerfile and be/Dockerfile deploy as two separate
+services (see the comments at the top of each for the variables to set).
 
 To make a host shell load and navigate to this remote:
 

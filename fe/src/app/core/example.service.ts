@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { httpResource } from '@angular/common/http';
+import { getRuntimeEnv } from './runtime-env';
 
 export interface Example {
   id: number;
@@ -9,10 +10,8 @@ export interface Example {
   createdAt: string;
 }
 
-const API_URL = 'http://localhost:3001/api/example';
-
 @Injectable({ providedIn: 'root' })
 export class ExampleService {
   /** Reactive resource that loads the example data from the backend API. */
-  readonly example = httpResource<Example>(() => API_URL);
+  readonly example = httpResource<Example>(() => `${getRuntimeEnv().beUrl}/api/example`);
 }
