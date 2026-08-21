@@ -1,1 +1,91 @@
-# angular-nest-microfrontend-remote-template
+# Remote Template
+
+A starter template for building a new **remote** microfrontend for a Native
+Federation host shell: an Angular 22 + daisyUI frontend and a NestJS backend,
+already wired together, ready to be renamed and developed.
+
+Clone it, run one script, start coding.
+
+## What's inside
+
+**Frontend (`fe/`)**
+- Angular 22, standalone components, signals
+- daisyUI 5 + Tailwind CSS 4 pre-configured
+- Native Federation pre-configured as a **remote**: exposes a `./Component`
+  entry point (`src/app/app.ts`) that a host shell can load at runtime via
+  `loadRemoteModule('<name>', './Component')`
+- An `ExampleService` (using `httpResource`) that calls the backend and
+  renders the result in a daisyUI card with loading/error states
+
+**Backend (`be/`)**
+- NestJS 11
+- CORS and a global `/api` prefix pre-configured
+- A `GET /api/example` endpoint the frontend already consumes
+
+## Quickstart
+
+```bash
+git clone <this-repo-url> my-remote
+cd my-remote
+./setup.sh my-remote 4202 3002
+```
+
+- `my-remote` — kebab-case name for your remote. This becomes the Native
+  Federation remote name, the manifest key / URL path a host mounts it
+  under, and part of the npm package names.
+- `4202` — optional, dev-server port for `fe` (default `4202`)
+- `3002` — optional, port for `be` (default `3002`)
+
+Pick ports that don't collide with the host shell (`4200`/`3000` by default)
+or with any other remote you're already running.
+
+`setup.sh` will:
+- Set the Native Federation remote name in `fe/federation.config.mjs`
+- Set the dev-server port in `fe/angular.json`
+- Point `fe`'s example service at the right backend port
+- Rename on-page titles/text and the npm package names
+- Set the backend's port and CORS origin in `be/src/main.ts`
+- Reset git history to a single fresh commit, so you're not carrying this
+  template's own commit history into your new remote
+
+You can delete `setup.sh` afterwards — it's a one-time bootstrap step.
+
+Then start both apps:
+
+```bash
+cd fe && npm install && npm start   # http://localhost:4202
+cd be && npm install && npm start   # http://localhost:3002
+```
+
+## Wiring it into a host shell
+
+To make a host actually load and navigate to this remote:
+
+1. Add it to the host's remotes manifest (e.g. the `REMOTES_JSON`
+   environment variable on the host's backend):
+   ```json
+   { "my-remote": "https://my-remote-fe.example.com/remoteEntry.json" }
+   ```
+2. Add a route in the host that lazy-loads it:
+   ```ts
+   {
+     path: 'my-remote',
+     loadComponent: () => loadRemoteModule('my-remote', './Component').then((m) => m.App),
+   }
+   ```
+3. Add a nav entry pointing at that route.
+
+> **Important:** Native Federation registers a remote under the `name` it
+> declares in its own `federation.config.mjs` - **not** under whatever key
+> the host's manifest happens to use to request it. `setup.sh` already keeps
+> these in sync for you, so as long as you don't hand-edit `name` afterwards,
+> the manifest key and route/`loadRemoteModule` calls just need to match the
+> `<name>` you gave `setup.sh`.
+
+## Deployment
+
+This template doesn't ship Dockerfiles or Railway config yet. If you need to
+deploy a remote built from it, use a host shell's Dockerfile setup as the
+model: separate Dockerfiles for `fe`/`be`, a runtime-generated `env.json` so
+the frontend knows its backend's URL without a rebuild, and CORS origins
+configured via an environment variable.

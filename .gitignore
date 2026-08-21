@@ -1,0 +1,18 @@
+# Node
+**/node_modules
+**/npm-debug.log*
+
+# Angular
+fe/dist
+fe/.angular
+
+# NestJS
+be/dist
+be/coverage
+
+# Env
+**/.env
+**/.env.local
+
+# OS
+.DS_Store
