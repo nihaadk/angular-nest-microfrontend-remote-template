@@ -239,9 +239,10 @@ cat <<EOF
   Frontend ($FE_SERVICE): https://$FE_DOMAIN
   Backend  ($BE_SERVICE): https://$BE_DOMAIN
 
-Add this to the host shell's REMOTES_JSON variable:
+Add this to the host shell's REMOTES_JSON variable (base URL only -
+the shell appends /remoteEntry.json itself):
 
-  {"$FEDERATION_NAME":"https://$FE_DOMAIN/remoteEntry.json"}
+  {"$FEDERATION_NAME":"https://$FE_DOMAIN"}
 EOF
 
 if [[ -z "$SHELL_FE_URL" ]]; then

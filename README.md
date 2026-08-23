@@ -49,6 +49,7 @@ or with any other remote you're already running.
   template's own commit history into your new remote
 
 You can delete `setup.sh` afterwards — it's a one-time bootstrap step.
+Detailed, step-by-step walkthrough (German): [`docs/setup.md`](docs/setup.md).
 
 Then start both apps:
 
@@ -62,9 +63,10 @@ cd be && npm install && npm start   # http://localhost:3002
 To make a host actually load and navigate to this remote:
 
 1. Add it to the host's remotes manifest (e.g. the `REMOTES_JSON`
-   environment variable on the host's backend):
+   environment variable on the host's backend) - base URL only, the host
+   appends `/remoteEntry.json` itself:
    ```json
-   { "my-remote": "https://my-remote-fe.example.com/remoteEntry.json" }
+   { "my-remote": "https://my-remote-fe.example.com" }
    ```
 2. Add a route in the host that lazy-loads it:
    ```ts
@@ -109,6 +111,10 @@ embedded, since its component then runs inside the shell's page and its
 
 Requires the [Railway CLI](https://docs.railway.com/guides/cli), logged in
 (`railway login`).
+
+Detailed, step-by-step walkthrough — including the CLI quirks/gotchas found
+while building this (worth reading before re-running it) — (German):
+[`docs/railway-deploy.md`](docs/railway-deploy.md).
 
 ### Manual alternative
 

@@ -127,8 +127,8 @@ section, for details.
 To make a host shell load and navigate to this remote:
 
   1. Add it to the host's remotes manifest, e.g. the REMOTES_JSON variable
-     on shell/be:
-       { "$NAME": "https://<this-remote-fe-domain>/remoteEntry.json" }
+     on shell/be (base URL only - the shell appends /remoteEntry.json itself):
+       { "$NAME": "https://<this-remote-fe-domain>" }
 
   2. Add a route in the host that lazy-loads it:
        {
