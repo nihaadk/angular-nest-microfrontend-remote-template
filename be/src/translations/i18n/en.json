@@ -1,0 +1,10 @@
+{
+  "app": {
+    "badge": "Remote App",
+    "title": "Remote Template 👋",
+    "subtitle": "The following data is loaded live from this remote's own NestJS backend.",
+    "loading": "Loading example…",
+    "error": "Error loading data from the backend. Is the server running at {{url}}?",
+    "loadedAt": "Loaded at:"
+  }
+}

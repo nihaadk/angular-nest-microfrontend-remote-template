@@ -86,9 +86,14 @@ sedi "s/\"port\": 4201/\"port\": $FE_PORT/" "$FE_DIR/angular.json"
 echo "→ public/env.json: local-dev default backend URL"
 sedi "s#http://localhost:3001#http://localhost:$BE_PORT#" "$FE_DIR/public/env.json"
 
-echo "→ app.html / app.spec.ts / index.html: display text"
-sedi "s/Remote Template/$DISPLAY_NAME/g" "$FE_DIR/src/app/app.html" "$FE_DIR/src/app/app.spec.ts"
+echo "→ index.html: page title"
 sedi "s/<title>Fe<\/title>/<title>$DISPLAY_NAME<\/title>/" "$FE_DIR/src/index.html"
+
+echo "→ be/src/translations/i18n/*.json: display text (en/de/bs)"
+sedi "s/Remote Template/$DISPLAY_NAME/g" \
+  "$BE_DIR/src/translations/i18n/en.json" \
+  "$BE_DIR/src/translations/i18n/de.json" \
+  "$BE_DIR/src/translations/i18n/bs.json"
 
 echo "→ package.json names (fe/be)"
 sedi "s/\"name\": \"fe\"/\"name\": \"$NAME-fe\"/" "$FE_DIR/package.json"

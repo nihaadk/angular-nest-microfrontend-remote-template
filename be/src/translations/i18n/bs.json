@@ -1,0 +1,10 @@
+{
+  "app": {
+    "badge": "Remote App",
+    "title": "Remote Template 👋",
+    "subtitle": "Sljedeći podaci se učitavaju uživo sa vlastitog NestJS backend-a ovog remote-a.",
+    "loading": "Učitavanje primjera…",
+    "error": "Greška pri učitavanju podataka sa backend-a. Da li server radi na {{url}}?",
+    "loadedAt": "Učitano:"
+  }
+}
