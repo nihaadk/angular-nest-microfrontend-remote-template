@@ -85,19 +85,24 @@ To make a host actually load and navigate to this remote:
 ## Deployment
 
 ```bash
-./railway-deploy.sh [shell-fe-url]
+./railway-deploy.sh <project> [shell-fe-url]
 ```
 
-Run after `setup.sh` (it reads this remote's name from
-`fe/federation.config.mjs`, so it can't disagree with it). Creates a new,
-isolated Railway project with two services (`<name>-fe`, `<name>-be`) via
-`railway up` - no GitHub repo or push required - generates a public domain
-for each, and wires `BE_URL`/`CORS_ORIGINS` between them. Prints the exact
-`REMOTES_JSON` line to add to a host shell. Safe to re-run (e.g. to
-redeploy after code changes, or to add `shell-fe-url` once you know it -
-required for the remote to work once embedded, since its component then
-runs inside the shell's page and its `fetch()` calls carry the shell's
-origin, not this remote's own).
+Run after `setup.sh`. `<project>` is the Railway project to deploy into -
+if a project with that exact name already exists in your account it's
+reused (the two services are just added to it), otherwise a new project
+with that name is created. Either way, the two services are always named
+`<project>-FE` and `<project>-BE`, case preserved - e.g. `<project>=REMOTE-2`
+gives you `REMOTE-2-FE` and `REMOTE-2-BE`. (This naming is independent of
+the remote's own Native Federation name in `federation.config.mjs` - that
+one only shows up in the `REMOTES_JSON` line printed at the end.)
+
+Deploys via `railway up` - no GitHub repo or push required - generates a
+public domain for each service, and wires `BE_URL`/`CORS_ORIGINS` between
+them. Safe to re-run (e.g. to redeploy after code changes, or to add
+`shell-fe-url` once you know it - required for the remote to work once
+embedded, since its component then runs inside the shell's page and its
+`fetch()` calls carry the shell's origin, not this remote's own).
 
 Requires the [Railway CLI](https://docs.railway.com/guides/cli), logged in
 (`railway login`).
