@@ -118,8 +118,10 @@ Next steps:
 
 You can now delete this script (setup.sh) - it's done its job.
 
-Ready for Railway: fe/Dockerfile and be/Dockerfile deploy as two separate
-services (see the comments at the top of each for the variables to set).
+Ready for Railway: run ./railway-deploy.sh to deploy this as its own
+isolated Railway project (two services, via 'railway up' - no GitHub repo
+needed). See its own comments, or README.md's Deployment section, for
+details.
 
 To make a host shell load and navigate to this remote:
 

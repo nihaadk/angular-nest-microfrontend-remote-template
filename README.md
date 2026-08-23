@@ -84,13 +84,38 @@ To make a host actually load and navigate to this remote:
 
 ## Deployment
 
-`fe` and `be` deploy as **two separate Railway services** from this repo
+```bash
+./railway-deploy.sh [shell-fe-url]
+```
+
+Run after `setup.sh` (it reads this remote's name from
+`fe/federation.config.mjs`, so it can't disagree with it). Creates a new,
+isolated Railway project with two services (`<name>-fe`, `<name>-be`) via
+`railway up` - no GitHub repo or push required - generates a public domain
+for each, and wires `BE_URL`/`CORS_ORIGINS` between them. Prints the exact
+`REMOTES_JSON` line to add to a host shell. Safe to re-run (e.g. to
+redeploy after code changes, or to add `shell-fe-url` once you know it -
+required for the remote to work once embedded, since its component then
+runs inside the shell's page and its `fetch()` calls carry the shell's
+origin, not this remote's own).
+
+Requires the [Railway CLI](https://docs.railway.com/guides/cli), logged in
+(`railway login`).
+
+### Manual alternative
+
+`fe` and `be` are also deployable by hand as two separate Railway services
 (root directories `fe` and `be`), each with its own `Dockerfile` - the
 variables to set are documented at the top of each one:
 
 - `be`: `CORS_ORIGINS`
 - `fe`: `BE_URL` (reference the `be` service directly, e.g.
   `BE_URL=https://${{be.RAILWAY_PUBLIC_DOMAIN}}`, rather than hardcoding it)
+
+Whichever way you deploy: when generating domains, don't pass an explicit
+port to Railway - let it auto-detect. An explicit target port broke
+Railway's routing for this exact template (502 "Application failed to
+respond") the first time it was deployed.
 
 `fe`'s image serves the built app with [`serve`](https://github.com/vercel/serve)
 and `--cors` enabled - unlike a host shell, this app's JS has to be loadable
