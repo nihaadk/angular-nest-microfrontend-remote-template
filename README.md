@@ -88,14 +88,17 @@ To make a host actually load and navigate to this remote:
 ./railway-deploy.sh [shell-fe-url]
 ```
 
-Run after `setup.sh`. **Interactive**: it first lists your existing Railway
-projects and lets you pick one to deploy into, or choose to create a new
-one (you'll be prompted for its name). Whichever project you end up with,
-the two services are always named `<project>-FE` and `<project>-BE`, case
-preserved - e.g. project `REMOTE-2` gives you `REMOTE-2-FE` and
-`REMOTE-2-BE`. (This naming is independent of the remote's own Native
-Federation name in `federation.config.mjs` - that one only shows up in the
-`REMOTES_JSON` line printed at the end.)
+Run after `setup.sh`. **Interactive**, two prompts:
+
+1. Lists your existing Railway projects and lets you pick one to deploy
+   into, or choose to create a new one (you'll be asked for its name).
+2. Asks for an **app name**, independent of the project - the project may
+   already host other apps (e.g. a host shell's own FE/BE), so this app
+   gets its own name. The two services are named `<app>-FE` and `<app>-BE`,
+   case preserved - e.g. app name `REMOTE-2` gives you `REMOTE-2-FE` and
+   `REMOTE-2-BE`. (Also independent of the remote's own Native Federation
+   name in `federation.config.mjs` - that one only shows up in the
+   `REMOTES_JSON` line printed at the end.)
 
 Deploys via `railway up` - no GitHub repo or push required - generates a
 public domain for each service, and wires `BE_URL`/`CORS_ORIGINS` between

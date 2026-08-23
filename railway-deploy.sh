@@ -17,8 +17,10 @@
 #
 # Interactive: on start, lists your existing Railway projects so you can
 # pick one to deploy into, or choose to create a new one (you'll then be
-# asked for its name). Whichever project you end up with, the two services
-# are named <project>-FE and <project>-BE (case preserved).
+# asked for its name). Either way, you're then asked for an app name -
+# independent of the project name, since an existing project may already
+# host other apps (e.g. a host shell) - which is what the two services end
+# up named after: <app>-FE and <app>-BE (case preserved).
 #
 # Usage:
 #   ./railway-deploy.sh [shell-fe-url]
@@ -94,6 +96,7 @@ echo "  n) Create a new project"
 echo
 read -rp "Select a number, or 'n' for new: " SELECTION
 
+CREATE_PROJECT=false
 if [[ "$SELECTION" =~ ^[0-9]+$ ]] && (( SELECTION >= 1 && SELECTION <= ${#PROJECT_NAMES[@]} )); then
   PROJECT_NAME="${PROJECT_NAMES[$((SELECTION - 1))]}"
   echo "→ Using existing project '$PROJECT_NAME'"
@@ -103,21 +106,31 @@ else
     echo "Error: project name must not be empty." >&2
     exit 1
   fi
+  CREATE_PROJECT=true
 fi
 
-FE_SERVICE="${PROJECT_NAME}-FE"
-BE_SERVICE="${PROJECT_NAME}-BE"
+# --- App name -----------------------------------------------------------------
+# Independent of the project name: an existing project may already host
+# other apps (e.g. a host shell's own FE/BE), so this app needs its own
+# name to avoid colliding with - or being confused with - those.
+echo
+read -rp "App name (services will be named <name>-FE / <name>-BE): " APP_NAME
+if [[ -z "$APP_NAME" ]]; then
+  echo "Error: app name must not be empty." >&2
+  exit 1
+fi
+FE_SERVICE="${APP_NAME}-FE"
+BE_SERVICE="${APP_NAME}-BE"
 
 # --- Resolve or create the project ------------------------------------------
-PROJECT_ID="$(echo "$LIST_JSON" | python3 -c "
+if [[ "$CREATE_PROJECT" == "false" ]]; then
+  PROJECT_ID="$(echo "$LIST_JSON" | python3 -c "
 import json, sys
 for p in json.load(sys.stdin):
     if p['name'] == '$PROJECT_NAME' and not p.get('deletedAt'):
         print(p['id'])
         break
 ")"
-
-if [[ -n "$PROJECT_ID" ]]; then
   ENVIRONMENT_ID="$(echo "$LIST_JSON" | python3 -c "
 import json, sys
 for p in json.load(sys.stdin):
@@ -145,7 +158,7 @@ for p in json.load(sys.stdin):
 ")"
 fi
 
-echo "→ Deploying to project '$PROJECT_NAME' ($PROJECT_ID): $FE_SERVICE + $BE_SERVICE"
+echo "→ Deploying '$APP_NAME' into project '$PROJECT_NAME' ($PROJECT_ID): $FE_SERVICE + $BE_SERVICE"
 
 # `railway add` (used below to create a service) has no --project/--environment
 # flags of its own, unlike `up`/`domain`/`variable set` - it only ever acts on
@@ -215,7 +228,7 @@ railway variable set "CORS_ORIGINS=$CORS_ORIGINS" \
 
 cat <<EOF
 
-✅ Deployed to Railway project '$PROJECT_NAME'
+✅ Deployed '$APP_NAME' to Railway project '$PROJECT_NAME'
 
   Frontend ($FE_SERVICE): https://$FE_DOMAIN
   Backend  ($BE_SERVICE): https://$BE_DOMAIN
@@ -230,8 +243,8 @@ if [[ -z "$SHELL_FE_URL" ]]; then
 
 Note: no shell URL was given, so $BE_SERVICE's CORS_ORIGINS only allows
 $FE_SERVICE's own origin. Once you know the shell's public FE URL, re-run
-this script with it as the argument (pick '$PROJECT_NAME' again when
-prompted):
+this script with it as the argument (pick '$PROJECT_NAME' and app name
+'$APP_NAME' again when prompted):
   ./railway-deploy.sh https://<shell-fe-domain>
 EOF
 fi

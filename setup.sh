@@ -120,8 +120,9 @@ You can now delete this script (setup.sh) - it's done its job.
 
 Ready for Railway: run ./railway-deploy.sh to deploy this (via 'railway up'
 - no GitHub repo needed). It lists your Railway projects so you can pick
-one, or create a new one; two services get named <project>-FE/<project>-BE.
-See its own comments, or README.md's Deployment section, for details.
+one (or create a new one), then asks for an app name; two services get
+named <app>-FE/<app>-BE. See its own comments, or README.md's Deployment
+section, for details.
 
 To make a host shell load and navigate to this remote:
 
