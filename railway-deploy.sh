@@ -15,15 +15,14 @@
 # domain) before creating anything, so you can use this again later to
 # redeploy after code changes, or to add the shell URL once you know it.
 #
-# Usage:
-#   ./railway-deploy.sh <project> [shell-fe-url]
+# Interactive: on start, lists your existing Railway projects so you can
+# pick one to deploy into, or choose to create a new one (you'll then be
+# asked for its name). Whichever project you end up with, the two services
+# are named <project>-FE and <project>-BE (case preserved).
 #
-#   <project>       Railway project to deploy into. If a project with this
-#                   exact name already exists in your account, it's reused
-#                   (services are added to it); otherwise a new project
-#                   with this name is created. Case is preserved as given -
-#                   e.g. <project>=REMOTE-2 creates/uses services named
-#                   REMOTE-2-FE and REMOTE-2-BE.
+# Usage:
+#   ./railway-deploy.sh [shell-fe-url]
+#
 #   [shell-fe-url]  Optional - the host shell's public frontend URL (e.g.
 #                   https://my-shell-fe.up.railway.app). If given, it's
 #                   added to this remote's backend CORS_ORIGINS, since the
@@ -31,35 +30,14 @@
 #                   embedded and its fetch calls carry the shell's origin.
 #
 # Example:
-#   ./railway-deploy.sh REMOTE-2 https://my-shell-fe.up.railway.app
+#   ./railway-deploy.sh https://my-shell-fe.up.railway.app
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FE_DIR="$SCRIPT_DIR/fe"
 BE_DIR="$SCRIPT_DIR/be"
-
-usage() {
-  cat <<EOF
-Usage: $(basename "$0") <project> [shell-fe-url]
-
-  <project>       Railway project to deploy into - reused if it already
-                   exists, created otherwise. Services are named
-                   <project>-FE and <project>-BE (case preserved).
-  [shell-fe-url]  Optional host shell frontend URL, added to CORS_ORIGINS.
-
-Example:
-  $(basename "$0") REMOTE-2 https://my-shell-fe.up.railway.app
-EOF
-  exit 1
-}
-
-[[ $# -ge 1 ]] || usage
-
-PROJECT_NAME="$1"
-SHELL_FE_URL="${2:-}"
-FE_SERVICE="${PROJECT_NAME}-FE"
-BE_SERVICE="${PROJECT_NAME}-BE"
+SHELL_FE_URL="${1:-}"
 
 command -v railway >/dev/null 2>&1 || {
   echo "Error: Railway CLI not found. Install: https://docs.railway.com/guides/cli" >&2
@@ -87,10 +65,50 @@ if [[ -z "$FEDERATION_NAME" ]]; then
   exit 1
 fi
 
-echo "→ Deploying to Railway project '$PROJECT_NAME' ($FE_SERVICE + $BE_SERVICE)"
+# --- Pick a project interactively -------------------------------------------
+echo "→ Fetching your Railway projects..."
+LIST_JSON="$(railway list --json)"
+
+# Portable read into an array: macOS ships bash 3.2 (no `mapfile`/`readarray`,
+# those need bash 4+), same reason setup.sh avoids bash's ${x^}/sed's \U.
+PROJECT_NAMES=()
+while IFS= read -r line; do
+  PROJECT_NAMES+=("$line")
+done < <(echo "$LIST_JSON" | python3 -c "
+import json, sys
+for p in json.load(sys.stdin):
+    if not p.get('deletedAt'):
+        print(p['name'])
+")
+
+echo
+echo "Available Railway projects:"
+if [[ ${#PROJECT_NAMES[@]} -eq 0 ]]; then
+  echo "  (none yet)"
+else
+  for i in "${!PROJECT_NAMES[@]}"; do
+    printf "  %d) %s\n" "$((i + 1))" "${PROJECT_NAMES[$i]}"
+  done
+fi
+echo "  n) Create a new project"
+echo
+read -rp "Select a number, or 'n' for new: " SELECTION
+
+if [[ "$SELECTION" =~ ^[0-9]+$ ]] && (( SELECTION >= 1 && SELECTION <= ${#PROJECT_NAMES[@]} )); then
+  PROJECT_NAME="${PROJECT_NAMES[$((SELECTION - 1))]}"
+  echo "→ Using existing project '$PROJECT_NAME'"
+else
+  read -rp "Name for the new project: " PROJECT_NAME
+  if [[ -z "$PROJECT_NAME" ]]; then
+    echo "Error: project name must not be empty." >&2
+    exit 1
+  fi
+fi
+
+FE_SERVICE="${PROJECT_NAME}-FE"
+BE_SERVICE="${PROJECT_NAME}-BE"
 
 # --- Resolve or create the project ------------------------------------------
-LIST_JSON="$(railway list --json)"
 PROJECT_ID="$(echo "$LIST_JSON" | python3 -c "
 import json, sys
 for p in json.load(sys.stdin):
@@ -100,7 +118,6 @@ for p in json.load(sys.stdin):
 ")"
 
 if [[ -n "$PROJECT_ID" ]]; then
-  echo "→ Project '$PROJECT_NAME' already exists, reusing it"
   ENVIRONMENT_ID="$(echo "$LIST_JSON" | python3 -c "
 import json, sys
 for p in json.load(sys.stdin):
@@ -109,7 +126,7 @@ for p in json.load(sys.stdin):
         break
 ")"
 else
-  echo "→ Project '$PROJECT_NAME' doesn't exist yet, creating it and deploying $BE_SERVICE"
+  echo "→ Creating project '$PROJECT_NAME' and deploying $BE_SERVICE"
   (cd "$BE_DIR" && railway up --new -y --name "$PROJECT_NAME" --service "$BE_SERVICE" .)
   LIST_JSON="$(railway list --json)"
   PROJECT_ID="$(echo "$LIST_JSON" | python3 -c "
@@ -128,7 +145,12 @@ for p in json.load(sys.stdin):
 ")"
 fi
 
-echo "→ Project: $PROJECT_ID"
+echo "→ Deploying to project '$PROJECT_NAME' ($PROJECT_ID): $FE_SERVICE + $BE_SERVICE"
+
+# `railway add` (used below to create a service) has no --project/--environment
+# flags of its own, unlike `up`/`domain`/`variable set` - it only ever acts on
+# whatever's linked in the current directory. Link once, here.
+railway link --project "$PROJECT_ID" --environment "$ENVIRONMENT_ID" >/dev/null
 
 # --- Ensure both services exist, then (re)deploy each -----------------------
 service_exists() {
@@ -143,7 +165,7 @@ deploy_service() {
   local service="$1" dir="$2"
   if [[ "$(service_exists "$service")" != "True" ]]; then
     echo "→ Creating $service"
-    railway add --service "$service" --project "$PROJECT_ID" --json >/dev/null
+    railway add --service "$service" --json >/dev/null
   fi
   echo "→ Deploying $service"
   (cd "$dir" && railway up -y --service "$service" --project "$PROJECT_ID" --environment "$ENVIRONMENT_ID" .)
@@ -207,7 +229,9 @@ if [[ -z "$SHELL_FE_URL" ]]; then
   cat <<EOF
 
 Note: no shell URL was given, so $BE_SERVICE's CORS_ORIGINS only allows
-$FE_SERVICE's own origin. Once you know the shell's public FE URL, re-run:
-  ./railway-deploy.sh $PROJECT_NAME https://<shell-fe-domain>
+$FE_SERVICE's own origin. Once you know the shell's public FE URL, re-run
+this script with it as the argument (pick '$PROJECT_NAME' again when
+prompted):
+  ./railway-deploy.sh https://<shell-fe-domain>
 EOF
 fi

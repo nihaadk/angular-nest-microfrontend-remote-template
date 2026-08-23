@@ -118,10 +118,10 @@ Next steps:
 
 You can now delete this script (setup.sh) - it's done its job.
 
-Ready for Railway: run ./railway-deploy.sh <project> to deploy this (two
-services, <project>-FE/<project>-BE, via 'railway up' - no GitHub repo
-needed). Reuses <project> if it already exists, creates it otherwise. See
-its own comments, or README.md's Deployment section, for details.
+Ready for Railway: run ./railway-deploy.sh to deploy this (via 'railway up'
+- no GitHub repo needed). It lists your Railway projects so you can pick
+one, or create a new one; two services get named <project>-FE/<project>-BE.
+See its own comments, or README.md's Deployment section, for details.
 
 To make a host shell load and navigate to this remote:
 
