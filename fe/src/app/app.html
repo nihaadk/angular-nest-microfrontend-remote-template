@@ -1,8 +1,8 @@
 <section class="mx-auto max-w-2xl px-4 py-12">
-  <div class="badge badge-secondary badge-outline mb-2">{{ 'app.badge' | translate }}</div>
-  <h1 class="text-3xl font-bold">{{ 'app.title' | translate }}</h1>
+  <div class="badge badge-secondary badge-outline mb-2">Remote App</div>
+  <h1 class="text-3xl font-bold">Remote Template 👋</h1>
   <p class="mt-2 text-base-content/70">
-    {{ 'app.subtitle' | translate }}
+    Die folgenden Daten werden live vom NestJS-Backend dieser Remote-App geladen.
   </p>
 
   <div class="card mt-8 bg-base-100 shadow-md">
@@ -10,11 +10,14 @@
       @if (example.isLoading()) {
         <div class="flex items-center gap-3">
           <span class="loading loading-spinner loading-md" aria-hidden="true"></span>
-          <span>{{ 'app.loading' | translate }}</span>
+          <span>Beispiel wird geladen…</span>
         </div>
       } @else if (example.error()) {
         <div role="alert" class="alert alert-error">
-          <span>{{ 'app.error' | translate: { url: beUrl } }}</span>
+          <span>
+            Fehler beim Laden der Daten vom Backend. Läuft der Server unter
+            <code>{{ beUrl }}</code>?
+          </span>
         </div>
       } @else if (example.value(); as data) {
         <h2 class="card-title">{{ data.title }}</h2>
@@ -25,7 +28,7 @@
           }
         </div>
         <p class="mt-4 text-sm text-base-content/60">
-          {{ 'app.loadedAt' | translate }} {{ data.createdAt | date: 'medium' }}
+          Geladen am: {{ data.createdAt | date: 'medium' }}
         </p>
       }
     </div>

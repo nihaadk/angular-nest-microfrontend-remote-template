@@ -44,23 +44,12 @@ Ab hier passiert die eigentliche Umbenennung, Datei für Datei:
 | `fe/federation.config.mjs` | `name: 'remote-template'` → `name: '<name>'` — der **Native-Federation-Name**, unter dem dieses Remote sich selbst registriert |
 | `fe/angular.json` | `"port": 4201` → `"port": <fe-port>` — der `ng serve`-Port |
 | `fe/public/env.json` | `http://localhost:3001` → `http://localhost:<be-port>` — wohin das FE lokal nach seinem Backend sucht |
+| `fe/src/app/app.html`, `fe/src/app/app.spec.ts` | `Remote Template` → Anzeigename aus Schritt 2 |
 | `fe/src/index.html` | `<title>Fe</title>` → `<title><Anzeigename></title>` |
-| `be/src/translations/i18n/{en,de,bs}.json` | `Remote Template` → Anzeigename aus Schritt 2 (der Anzeigetext lebt hier, nicht mehr in `app.html` — siehe unten) |
 | `fe/package.json` | `"name": "fe"` → `"name": "<name>-fe"` |
 | `be/package.json` | `"name": "be"` → `"name": "<name>-be"` |
 | `be/src/main.ts` | Standard-Port `3001` → `<be-port>`; CORS-Origin `http://localhost:4201` → `http://localhost:<fe-port>` |
 | `be/.env.example` | dieselben zwei Werte wie in `main.ts`, für die lokale `.env`-Vorlage |
-
-**i18n:** `app.html` enthält keinen hartkodierten Text mehr, sondern nur
-`| translate`-Keys (`app.title`, `app.subtitle`, …). Die Werte kommen zur
-Laufzeit von `be/src/translations/` (eigener `TranslationsController`,
-eigene `en`/`de`/`bs`-JSON-Dateien) über einen *Child*-`TranslateService`
-(`provideChildTranslateService` in `fe/src/app/app.ts`). Der Trick dabei:
-die **aktive Sprache** wird von einer Host-Shell geerbt (falls das Remote
-in eine eingebettet ist - via `@ngx-translate/core`s eingebauter
-Parent/Child-Hierarchie über den gemeinsam geteilten, `singleton: true`
-`shareAll()`-Eintrag), aber die **Übersetzungswerte** kommen immer vom
-eigenen Backend dieses Remotes, nie vom Backend der Shell.
 
 **Wichtig:** `federation.config.mjs`s `name`-Feld ist die einzige Stelle,
 die für die spätere Einbindung in eine Host-Shell wirklich zählt — Native

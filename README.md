@@ -16,22 +16,11 @@ Clone it, run one script, start coding.
   `loadRemoteModule('<name>', './Component')`
 - An `ExampleService` (using `httpResource`) that calls the backend and
   renders the result in a daisyUI card with loading/error states
-- **i18n** (`@ngx-translate/core`, English/German/Bosnian) via a *child*
-  `TranslateService` (`provideChildTranslateService` on `app.ts`) - this
-  remote's text comes from its **own** backend (`fe/src/app/core/
-  backend-translate-loader.ts`), but the active language is inherited from
-  whatever host shell embeds it (a shared, `singleton: true` copy of
-  `@ngx-translate/core` via `shareAll()`, plus ngx-translate's built-in
-  parent/child hierarchy) - switch the language in a compatible host and
-  this remote switches with it, no extra wiring needed on either side.
-  Works standalone too (no parent found → behaves like its own root).
 
 **Backend (`be/`)**
 - NestJS 11
 - CORS and a global `/api` prefix pre-configured
 - A `GET /api/example` endpoint the frontend already consumes
-- A `GET /api/translations/:lang` endpoint (`src/translations/`) serving
-  this remote's own translations
 
 ## Quickstart
 
