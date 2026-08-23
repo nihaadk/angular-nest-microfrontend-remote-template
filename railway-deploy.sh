@@ -140,7 +140,7 @@ for p in json.load(sys.stdin):
 ")"
 else
   echo "→ Creating project '$PROJECT_NAME' and deploying $BE_SERVICE"
-  (cd "$BE_DIR" && railway up --new -y --name "$PROJECT_NAME" --service "$BE_SERVICE" .)
+  (cd "$BE_DIR" && railway up --new -y --name "$PROJECT_NAME" --service "$BE_SERVICE")
   LIST_JSON="$(railway list --json)"
   PROJECT_ID="$(echo "$LIST_JSON" | python3 -c "
 import json, sys
@@ -181,7 +181,13 @@ deploy_service() {
     railway add --service "$service" --json >/dev/null
   fi
   echo "→ Deploying $service"
-  (cd "$dir" && railway up -y --service "$service" --project "$PROJECT_ID" --environment "$ENVIRONMENT_ID" .)
+  # No trailing "." path argument here: passing it explicitly makes this
+  # exact `railway up` invocation fail with "prefix not found" (a Railway
+  # CLI bug/quirk) - omitting it lets PATH default to cwd instead, which
+  # works. Silently broke this under `set -e`: BE would "succeed" (service
+  # created) but never actually deploy, and the script would exit before
+  # ever reaching FE.
+  (cd "$dir" && railway up -y --service "$service" --project "$PROJECT_ID" --environment "$ENVIRONMENT_ID")
 }
 
 # BE_SERVICE may already be deployed above as part of creating a new
